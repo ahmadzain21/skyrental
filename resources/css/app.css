@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+    The lines above are intact.
+    The lines below were added by maryUI installer.
+*/
+
+@font-face {
+    font-family: Neulis;
+    src: url('../../public/fonts/fonnts.com-Neulis_Cursive_Medium.otf');
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/** daisyUI */
+@plugin "daisyui" {
+    themes: light --default, dark --prefersdark;
+}
+
+/* maryUI */
+@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
+
+/* Theme toggle */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/**
+* Paginator - Traditional style
+* Because Laravel defaults does not match well the design of daisyUI.
+*/
+
+.mary-table-pagination span[aria-current="page"]>span {
+    @apply bg-primary text-base-100
+}
+
+.mary-table-pagination button {
+    @apply cursor-pointer
+}
+
+@layer components {
+    .error {
+        color: red;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .form-control {
+        background-color: red;
+    }
+
+    .swiper {
+        width: 100%;
+        overflow-y: visible;
+        height: 100%;
+    }
+
+    .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+    }
+}
+
+/* RIGHT → LEFT */
+@keyframes marquee-left {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* LEFT → RIGHT */
+@keyframes marquee-right {
+    0% {
+        transform: translateX(-50%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.animate-marquee-left {
+    animation: marquee-left 18s linear infinite;
+}
+
+.animate-marquee-right {
+    animation: marquee-right 18s linear infinite;
+}
+
+/* Outline text */
+.stroke-text {
+    -webkit-text-stroke: 2px #9ca3af;
+    /* gray-400 */
+}
+
+/**
+    The lines above are intact.
+    The lines below were added by maryUI installer.
+*/
