@@ -21,6 +21,6 @@ class Home extends Component
      */
     public function render(): View|Closure|string
     {
-        return view('Layouts.home');
+        return view('layouts.home');
     }
 }
