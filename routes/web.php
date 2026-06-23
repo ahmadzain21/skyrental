@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 
 Route::view('/', [PageController::class, 'welcome'])->name('welcome');
@@ -20,12 +21,12 @@ Route::get('products', [PageController::class, 'products'])->name('products');
 Route::get('booking-status', [PageController::class, 'bookingStatus'])->name('booking.status');
 Route::get('prices', [PageController::class, 'prices'])->name('prices');
 
-Route::get('/db-check', function () {
-    return [
-        'DB_CONNECTION' => env('DB_CONNECTION'),
-        'DB_HOST' => env('DB_HOST'),
-        'DB_DATABASE' => env('DB_DATABASE'),
-    ];
+Route::get('/force-logout', function (Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/login');
 });
 
 Route::get('/geo/search', function (Request $request) {
