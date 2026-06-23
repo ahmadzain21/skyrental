@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\View;
 use App\Http\View\Composers\SeoComposer;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -47,5 +48,6 @@ class AppServiceProvider extends ServiceProvider
 
         Booking::observe(BookingObserver::class);
         View::composer('*', SeoComposer::class);
+        URL::forceScheme('https');
     }
 }
