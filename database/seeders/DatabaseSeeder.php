@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
         }
 
         ModelsGallery::factory(10)->create();
-        Iphones::factory(10)->create();
+        #Iphones::factory(10)->create();
         Revenue::factory()->count(5)->create();
         FaqFactory::new()->count(5)->create([
             'created_by' => User::factory()->create()->id,
