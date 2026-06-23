@@ -12,14 +12,8 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader
 
-RUN rm -f bootstrap/cache/*.php
-
 RUN chmod -R 775 storage bootstrap/cache
 
-CMD sh -c "
-rm -f bootstrap/cache/*.php &&
-php artisan config:clear &&
-php artisan cache:clear &&
-php artisan config:cache &&
-php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
-"
+EXPOSE 8080
+
+CMD sh -c "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
