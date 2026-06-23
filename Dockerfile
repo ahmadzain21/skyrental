@@ -26,6 +26,7 @@ RUN npm run build
 RUN chmod -R 775 storage bootstrap/cache
 
 CMD php artisan storage:link || true; \
+    php artisan session:table; \
     php artisan migrate --force; \
     php artisan config:cache; \
     php artisan serve --host=0.0.0.0 --port=$PORT
