@@ -289,6 +289,6 @@ class DeliveryMap extends Component
     }
 
     public function backToDelivery() {
-        return redirect()->route('bookings');
+        return redirect()->route('booking.delivery');
     }
 }

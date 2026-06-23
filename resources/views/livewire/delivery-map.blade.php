@@ -171,7 +171,7 @@
             @endif
 
             @if ($deliveryStatus === 'delivered')
-                <button wire:click="finishDelivery"
+                <button wire:click="backToDelivery"
                     class="bg-red-600 text-white px-4 py-2 rounded w-full sm:w-auto">
                     Kembali
                 </button>
