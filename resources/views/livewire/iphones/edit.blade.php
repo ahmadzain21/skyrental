@@ -213,7 +213,6 @@
                                         placeholder="24 (jam)" x-model="item.hours">
                                     <input class="rounded-sm border-gray-400 w-[60%]" type="text"
                                         placeholder="Rp. 100,000" x-model="item.price"
-                                        x-mask:dynamic="'Rp. ' + $money($input)"
                                         @input="let cleaned = $event.target.value.replace(/[^\d]/g, '');
                                                 item.price = parseInt(cleaned) || 0;">
                                     <button type="button" @click="addDuration"

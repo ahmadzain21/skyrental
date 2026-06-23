@@ -270,7 +270,7 @@
                         $('.note-group-select-from-files').first().remove();
                     },
                     onChange: function(contents, $editable) {
-                        @this.set('description', contents, true);
+                        //@this.set('description', contents, true);
                     }
                 }
             });
