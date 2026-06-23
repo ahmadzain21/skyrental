@@ -28,7 +28,7 @@ RUN chmod -R 775 storage bootstrap/cache
 CMD php artisan storage:link || true; \
     php artisan config:clear; \
     php artisan cache:clear; \
-    php artisan migrate --force; \
-    php artisan db:seed --force || true; \
+    pphp artisan migrate --force; \
+    php artisan db:seed --class=DatabaseSeeder --force; \
     php artisan config:cache; \
     php artisan serve --host=0.0.0.0 --port=$PORT
