@@ -20,20 +20,21 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-       $roles = ['super-admin', 'admin'];
-        
+        $roles = ['super-admin', 'admin'];
+
         $this->call([
             PermissionSeeder::class,
             RolesSeeder::class
         ]);
-        
+
         foreach ($roles as $role) {
-            # code...
-            User::factory()->create([
+            $user = User::factory()->create([
                 'name' => $role,
-                'email' => $role.'@example.com',
+                'email' => $role . '@example.com',
                 'password' => Hash::make('123456')
-            ])->assignRole($role);
+            ]);
+
+            $user->assignRole($role);
         }
 
         ModelsGallery::factory(10)->create();
