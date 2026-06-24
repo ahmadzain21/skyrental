@@ -77,7 +77,7 @@
                 @forelse ($galleries as $index => $gallery)
                     <img id="gallery-{{ $index }}"
                         @click="selectPoster({{ $gallery->id }}, '{{ $gallery->image }}', {{ $index }})"
-                        src="{{ asset('storage/' . $gallery->image) }}" alt="" srcset=""
+                        src="{{ str_starts_with($gallery->image, 'https') ? $gallery->image : asset('storage/' . $gallery->image) }}" alt="" srcset=""
                         class="imgPoster w-full object-contain object-left hover:ring-2 hover:ring-blue-500 ease-in duration-100 cursor-pointer">
                 @empty
                 @endforelse

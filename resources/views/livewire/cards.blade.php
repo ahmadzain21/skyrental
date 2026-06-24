@@ -22,7 +22,7 @@
 
                         {{-- Image --}}
                         <div class="flex justify-center items-center mb-4 h-64">
-                            <img data-src="{{ asset('storage/' . $iphone->gallery->image) }}" alt="{{ $iphone->name }}"
+                            <img data-src="{{ str_starts_with($iphone->gallery->image, 'https') ? $iphone->gallery->image : asset('storage/' . $iphone->gallery->image) }}" alt="{{ $iphone->name }} "
                                 class="lazy max-h-full object-contain
                                    group-hover:scale-105 transition duration-300">
                         </div>

@@ -249,7 +249,7 @@
                     ">
                                     {{-- IMAGE --}}
                                     <div class="flex justify-center mb-4">
-                                        <img src="{{ asset('storage/' . $iphone->gallery->image) }}"
+                                        <img src=" {{ str_starts_with($iphone->gallery->image, 'https') ? $iphone->gallery->image : asset('storage/' . $iphone->gallery->image) }}"
                                             alt="{{ $iphone->name }}" class="h-40 object-contain">
                                     </div>
 

@@ -46,7 +46,7 @@
         {{-- PERANGKAT --}}
         @if ($detailBookingIphones?->iphone)
             <div x-data="{ copied: false }" class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <img src="{{ asset('storage/' . $detailBookingIphones->iphone->gallery->image) }}"
+                <img src="{{ str_starts_with($detailBookingIphones->iphone->gallery->image, 'https') ? $detailBookingIphones->iphone->gallery->image : asset('storage/' . $detailBookingIphones->iphone->gallery->image) }}"
                     class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover">
 
                 <div class="flex-1 space-y-1">

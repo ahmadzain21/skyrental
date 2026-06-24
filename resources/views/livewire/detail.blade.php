@@ -213,7 +213,7 @@ $watch('selectedMinute', () => selectedDateFormatted = formatDate(selectedDate))
 
             {{-- Image --}}
             <div class="w-full h-[40vh] relative">
-                <img src="{{ asset('storage/' . $iphone->gallery->image) }}" alt="{{ $iphone->name }}"
+                <img src="{{ str_starts_with($iphone->gallery->image, 'https') ? $iphone->gallery->image : asset('storage/' . $iphone->gallery->image) }}" alt="{{ $iphone->name }}"
                     class="w-full h-full object-contain absolute">
             </div>
 
