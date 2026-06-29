@@ -59,7 +59,7 @@ class DeliveryMap extends Component
 
         foreach ($points as $i => $from) {
 
-            $labelFrom = $i === 0 ? 'A' : chr(65 + $i);
+            $labelFrom = chr(65 + $i); // A, B, C, D...
 
             $this->matrixLabels[] = $labelFrom;
 
@@ -69,38 +69,19 @@ class DeliveryMap extends Component
 
             foreach ($points as $j => $to) {
 
-                $labelTo = $j === 0 ? 'A' : chr(65 + $j);
+                $labelTo = chr(65 + $j);
 
-                // hasil jarak asli (hasil akhir / setelah Dijkstra)
-                $realDistance = round(
-                    $this->distance(
-                        $from['lat'],
-                        $from['long'],
-                        $to['lat'],
-                        $to['long']
-                    ),
-                    2
-                );
-
-                $alternatives = $this->getAlternativeRoutes($from, $to);
-
-                // MATRIX HASIL DIJKSTRA
-                $this->distanceMatrix[$labelFrom][$labelTo] = min($alternatives);
-
-                // MATRIX SEBELUM DIJKSTRA
-                // simulasi bobot awal belum optimal
-                if ($labelFrom === $labelTo) {
-
-                    $this->initialMatrix[$labelFrom][$labelTo] = 0;
+                if ($i === $j) {
+                    $distance = 0;
                 } else {
-
-                    // tambahkan penalti 10%-30%
-
-                    $this->initialMatrix[$labelFrom][$labelTo] = implode(
-                        ' / ',
-                        $alternatives
-                    );
+                    $distance = $this->getAlternativeRoutes($from, $to);
                 }
+
+                // Matrix awal (nilai asli)
+                $this->initialMatrix[$labelFrom][$labelTo] = $distance;
+
+                // Matrix hasil (nilai asli)
+                $this->distanceMatrix[$labelFrom][$labelTo] = $distance;
             }
         }
     }
@@ -110,7 +91,7 @@ class DeliveryMap extends Component
         $url = "https://router.project-osrm.org/route/v1/driving/" .
             "{$from['long']},{$from['lat']};" .
             "{$to['long']},{$to['lat']}" .
-            "?alternatives=true&overview=false";
+            "?overview=false";
 
         $cacheKey = 'osrm_' . md5($url);
 
@@ -125,24 +106,23 @@ class DeliveryMap extends Component
         });
 
         if (!$response) {
-            return [PHP_FLOAT_MAX]; // fallback biar tidak crash
+            return PHP_FLOAT_MAX; // fallback biar tidak crash
         }
 
         $data = json_decode($response, true);
 
-        return collect($data['routes'])
-            ->pluck('distance')
-            ->map(fn($d) => round($d / 1000, 2))
-            ->toArray();
+        return round($data['routes'][0]['distance'] / 1000, 2);
     }
 
     private function runDijkstra()
     {
+        // Daftar node (A = Base, B, C, D, dst.)
         $nodes = $this->matrixLabels;
 
-        $dist = [];
-        $prev = [];
-        $visited = [];
+        // Inisialisasi variabel Dijkstra
+        $dist = [];      // Menyimpan jarak terpendek dari titik awal
+        $prev = [];      // Menyimpan node sebelumnya
+        $visited = [];   // Menandai node yang sudah diproses
 
         foreach ($nodes as $node) {
             $dist[$node] = PHP_FLOAT_MAX;
@@ -150,79 +130,121 @@ class DeliveryMap extends Component
             $visited[$node] = false;
         }
 
+        // Titik awal selalu A
         $dist['A'] = 0;
-
-        $start = 'A';
-        $visualVisited = [];
-        $visualCurrent = $start;
 
         $this->dijkstraSteps = [];
         $stepIndex = 1;
 
-        while (count($visualVisited) < count($nodes)) {
+        // Selama masih ada node yang belum dikunjungi
+        while (true) {
 
-            // ===== NEAREST NEIGHBOR STYLE (VISUAL ONLY) =====
+            // =====================================================
+            // Pilih node yang belum dikunjungi
+            // dengan nilai distance paling kecil
+            // (Ini adalah inti algoritma Dijkstra)
+            // =====================================================
             $u = null;
 
             foreach ($nodes as $node) {
-                if (in_array($node, $visualVisited)) continue;
 
-                if ($u === null || $this->distanceMatrix[$visualCurrent][$node] < $this->distanceMatrix[$visualCurrent][$u]) {
+                if ($visited[$node]) {
+                    continue;
+                }
+
+                if ($u === null || $dist[$node] < $dist[$u]) {
                     $u = $node;
                 }
             }
 
-            if ($u === null) break;
+            // Semua node sudah diproses
+            if ($u === null) {
+                break;
+            }
 
-            // ===== LOG STEP (NN ORDER) =====
-            $this->dijkstraSteps[] = [
-                'step' => $stepIndex++,
-                'current' => $u,
-                'distances' => $dist,      // tetap hasil Dijkstra (bukan NN)
-                'visited' => $visualVisited
-            ];
+            // Jika node tidak dapat dijangkau
+            if ($dist[$u] == PHP_FLOAT_MAX) {
+                break;
+            }
 
-            $visualVisited[] = $u;
-            $visualCurrent = $u;
-
-            // ===== DIJKSTRA RELAXATION TETAP BENAR =====
+            // =====================================================
+            // Relaxation
+            // Hitung apakah jalur melalui node $u
+            // lebih pendek dibanding jalur sebelumnya
+            // =====================================================
             foreach ($nodes as $neighbor) {
 
-                if (!$visited[$neighbor] && isset($this->distanceMatrix[$u][$neighbor])) {
+                // Lewati node yang sudah diproses
+                if ($visited[$neighbor]) {
+                    continue;
+                }
 
-                    $alt = $dist[$u] + $this->distanceMatrix[$u][$neighbor];
+                // Lewati jika tidak ada edge
+                if (!isset($this->distanceMatrix[$u][$neighbor])) {
+                    continue;
+                }
 
-                    if ($alt < $dist[$neighbor]) {
-                        $dist[$neighbor] = $alt;
-                        $prev[$neighbor] = $u;
+                // Hitung jarak alternatif
+                $alt = $dist[$u] + $this->distanceMatrix[$u][$neighbor];
 
-                        $this->distanceMatrix['A'][$neighbor] = round($alt, 2);
-                    }
+                // Update jika lebih pendek
+                if ($alt < $dist[$neighbor]) {
+                    $dist[$neighbor] = $alt;
+                    $prev[$neighbor] = $u;
                 }
             }
 
+            // Tandai node telah diproses
             $visited[$u] = true;
+
+            // Simpan proses iterasi untuk ditampilkan
+            $this->dijkstraSteps[] = [
+                'step' => $stepIndex++,
+                'current' => $u,
+                'visited' => array_keys(array_filter($visited)),
+                'distances' => $dist
+            ];
         }
 
+        // =====================================================
+        // Simpan hasil akhir Dijkstra
+        // =====================================================
         foreach ($nodes as $node) {
+
             $this->dijkstraResult[$node] = [
-                'distance' => round($dist[$node], 4),
+                'distance' => $dist[$node] == PHP_FLOAT_MAX
+                    ? null
+                    : round($dist[$node], 2),
                 'previous' => $prev[$node]
             ];
         }
 
-        $this->totalDistance = array_sum($dist);
-
-        $route = [];
-
+        // =====================================================
+        // Mengurutkan tujuan berdasarkan jarak dari titik awal
+        // (Ini bukan bagian algoritma Dijkstra)
+        // =====================================================
         $sortedNodes = collect($this->dijkstraResult)
             ->except('A')
+            ->filter(fn($item) => $item['distance'] !== null)
             ->sortBy('distance');
 
+        $route = [];
+        $this->optimalRoute = [];
+        $this->totalDistance = 0;
+
+        $previousNode = 'A';
+
         foreach ($sortedNodes as $node => $result) {
+
+            // Hitung total jarak sesuai urutan yang ditampilkan
+            $this->totalDistance += $this->distanceMatrix[$previousNode][$node];
+
+            $previousNode = $node;
+
             $index = ord($node) - 66;
 
             if (isset($this->bookings[$index])) {
+
                 $booking = $this->bookings[$index];
 
                 $this->optimalRoute[] = $booking->customer_name;
@@ -236,26 +258,9 @@ class DeliveryMap extends Component
             }
         }
 
+        $this->totalDistance = round($this->totalDistance, 2);
+
         return $route;
-    }
-
-    private function distance($lat1, $lon1, $lat2, $lon2)
-    {
-        $earthRadius = 6371; // km
-
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
-
-        $a =
-            sin($dLat / 2) * sin($dLat / 2) +
-            cos(deg2rad($lat1)) *
-            cos(deg2rad($lat2)) *
-            sin($dLon / 2) *
-            sin($dLon / 2);
-
-        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-        return round($earthRadius * $c, 2);
     }
 
     public function render()
@@ -288,7 +293,20 @@ class DeliveryMap extends Component
         session()->flash('message', 'Perjalanan selesai');
     }
 
-    public function backToDelivery() {
+    public function buildPath($node)
+    {
+        $path = [];
+
+        while ($node !== null) {
+            array_unshift($path, $node);
+            $node = $this->dijkstraResult[$node]['previous'] ?? null;
+        }
+
+        return implode(' → ', $path);
+    }
+
+    public function backToDelivery()
+    {
         return redirect()->route('booking.delivery');
     }
 }
